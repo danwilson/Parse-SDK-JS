@@ -852,6 +852,21 @@ describe('ParseObject', () => {
       done();
     });
   }));
+  
+  it('interpolates delete operations', asyncHelper((done) => {
+    CoreManager.getRESTController()._setXHR(
+      mockXHR([{
+        status: 200,
+        response: { objectId: 'newattributes', deletedKey: {__op: 'Delete'} }
+      }])
+    );
+    var o = new ParseObject('Item');
+    o.save({ key: 'value', deletedKey: 'keyToDelete' }).then(() => {
+      expect(o.get('key')).toBe('value');
+      expect(o.get('deletedKey')).toBeUndefined();
+      done();
+    });
+  }));
 
   it('can make changes while in the process of a save', asyncHelper((done) => {
     var xhr = {
@@ -2074,5 +2089,16 @@ describe('ParseObject extensions', () => {
     });
     f = new FeatureObject();
     expect(f.foo() + f.bar()).toBe('FB');
+  });
+
+  it('can specify a custom initializer', () => {
+    var InitObject = ParseObject.extend('InitObject', {
+      initialize: function(attrs, options) {
+        this.set('field', 12);
+      }
+    });
+
+    var i = new InitObject()
+    expect(i.get('field')).toBe(12);
   });
 });
